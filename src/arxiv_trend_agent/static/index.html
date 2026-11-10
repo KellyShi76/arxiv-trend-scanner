@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Local arXiv research-trend scanner with optional PDF parsing." />
+    <title>arXiv Trend Scanner</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="arXiv Trend Scanner home">
+        <span class="brand-mark" aria-hidden="true">A</span>
+        <span>
+          <strong>arXiv Trend Scanner</strong>
+          <small>Evidence-linked research scans</small>
+        </span>
+      </a>
+      <span class="local-badge"><span></span> Local only</span>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div>
+          <h1>Move fast.<br /><em>Before your next idea becomes related work.</em></h1>
+          <p class="hero-copy">
+            Track where a field is moving, inspect the papers behind the signal, and export an
+            auditable trend report before the literature gets ahead of you.
+          </p>
+        </div>
+        <div class="workflow-strip" aria-label="Workflow stages">
+          <span><b>01</b> Plan</span><i></i><span><b>02</b> Analyze</span><i></i
+          ><span><b>03</b> Synthesize</span>
+        </div>
+      </section>
+
+      <section class="workspace">
+        <form id="runForm" class="panel form-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="step-label">NEW SCAN</p>
+              <h2>Research question</h2>
+            </div>
+            <span class="scope-pill">arXiv</span>
+          </div>
+
+          <label for="topic">Topic</label>
+          <textarea
+            id="topic"
+            name="topic"
+            rows="3"
+            required
+            placeholder="e.g. causal inference for longitudinal data and personalized treatment effects"
+          >causal inference for longitudinal data and personalized treatment effects</textarea>
+
+          <div class="presets" aria-label="Example topics">
+            <button type="button" data-preset="causal">Causal modeling</button>
+            <button type="button" data-preset="irl">Inverse RL</button>
+            <button type="button" data-preset="representation">Self-supervised learning</button>
+          </div>
+
+          <div class="field-grid three">
+            <div>
+              <label for="recentDays">Recent window</label>
+              <div class="input-suffix"><input id="recentDays" type="number" min="1" value="180" /><span>days</span></div>
+            </div>
+            <div>
+              <label for="baselineDays">Baseline window</label>
+              <div class="input-suffix"><input id="baselineDays" type="number" min="1" value="730" /><span>days</span></div>
+            </div>
+            <div>
+              <label for="maxResults">Papers per window</label>
+              <input id="maxResults" type="number" min="1" max="200" value="30" />
+            </div>
+          </div>
+
+          <div class="field-grid two">
+            <div>
+              <label for="backend">Analysis mode</label>
+              <select id="backend">
+                <option value="heuristic">Reproducible rules</option>
+                <option value="openai">Model-backed agents</option>
+              </select>
+              <p id="backendHint" class="field-hint">No API key or model charges.</p>
+            </div>
+            <div>
+              <label for="asOf">As-of date</label>
+              <input id="asOf" type="date" required />
+            </div>
+          </div>
+
+          <div class="option-card">
+            <label class="switch-row" for="parsePdfs">
+              <span>
+                <strong>Parse selected PDFs</strong>
+                <small>Downloads a balanced, capped subset and extracts text locally.</small>
+              </span>
+              <input id="parsePdfs" type="checkbox" />
+              <i aria-hidden="true"></i>
+            </label>
+            <div id="pdfLimitRow" class="pdf-limit" hidden>
+              <label for="maxPdfs">Maximum PDFs</label>
+              <input id="maxPdfs" type="number" min="1" max="20" value="4" />
+            </div>
+          </div>
+
+          <details>
+            <summary>Customize theme taxonomy</summary>
+            <p class="field-hint">One theme per line: <code>Name=keyword one,keyword two</code></p>
+            <textarea id="themes" rows="5">Personalization=personalized,personalization,heterogeneous,individualized
+Longitudinal modeling=longitudinal,sequential,recurrent,rnn,transformer
+Doubly robust estimation=doubly robust,orthogonal,propensity
+Continuous treatment=continuous treatment,dose-response,dosage</textarea>
+          </details>
+
+          <button id="startButton" class="primary-button" type="submit">
+            <span>Start research scan</span><b aria-hidden="true">→</b>
+          </button>
+          <p class="privacy-note">PDFs and results stay on this computer. Extracted full text is not copied into export files.</p>
+        </form>
+
+        <aside class="side-column">
+          <section class="panel principles-panel">
+            <p class="step-label">BUILT-IN GUARDRAILS</p>
+            <h2>What stays deterministic</h2>
+            <ul>
+              <li><span>Query log</span><b>Recorded</b></li>
+              <li><span>Date windows</span><b>Exact</b></li>
+              <li><span>Version merging</span><b>Canonical ID</b></li>
+              <li><span>Trend counts</span><b>Calculated</b></li>
+              <li><span>Evidence IDs</span><b>Validated</b></li>
+            </ul>
+            <p class="aside-note">The report is an exploratory arXiv scan—not an automated systematic review.</p>
+          </section>
+
+          <section id="statusPanel" class="panel status-panel" hidden aria-live="polite">
+            <div class="status-heading">
+              <div>
+                <p class="step-label">CURRENT RUN</p>
+                <h2 id="statusTitle">Starting…</h2>
+              </div>
+              <span id="statusPercent">0%</span>
+            </div>
+            <div class="progress-track"><i id="progressBar"></i></div>
+            <p id="statusMessage">Preparing the workflow.</p>
+            <p id="statusError" class="error-message" hidden></p>
+          </section>
+        </aside>
+      </section>
+
+      <section id="results" class="results" hidden>
+        <div class="results-heading">
+          <div>
+            <p class="eyebrow">RUN COMPLETE</p>
+            <h2>Evidence package</h2>
+          </div>
+          <div id="downloadLinks" class="download-links"></div>
+        </div>
+        <div id="metricCards" class="metric-cards"></div>
+        <div class="report-shell">
+          <div class="report-toolbar">
+            <span>trend_report.md</span>
+            <button id="copyReport" type="button">Copy report</button>
+          </div>
+          <pre id="reportText"></pre>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <span>arXiv Trend Scanner · local research utility</span>
+      <a href="/docs" target="_blank" rel="noreferrer">API documentation</a>
+    </footer>
+    <script src="/static/app.js" defer></script>
+  </body>
+</html>
+
+

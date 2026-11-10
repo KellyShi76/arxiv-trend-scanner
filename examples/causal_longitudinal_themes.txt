@@ -1,0 +1,6 @@
+# Repeat these flags in a live command to reproduce the example taxonomy.
+--theme "Personalization=personalized,personalization,heterogeneous,individualized,subgroup"
+--theme "Longitudinal modeling=longitudinal,sequential,recurrent,rnn,transformer,trajectory"
+--theme "Doubly robust estimation=doubly robust,orthogonal,propensity,nuisance model"
+--theme "Continuous treatment=continuous treatment,dose-response,dosage"
+
