@@ -2,20 +2,12 @@
 
 `arxiv-trend-agent` is a small, auditable agentic workflow that scans arXiv evidence for a topic, screens papers, and produces an evidence-linked trend report. It includes a command-line interface and a local browser interface.
 
-It is designed as a research utility rather than a claim that an automated **systematic review** has been completed. Version 0.2 can optionally download and parse a capped subset of arXiv PDFs, but extracted text is still machine-read evidence—not independent verification.
+Claim: It is designed for my own use as a research utility. 
 
 ![arXiv Trend Scanner web interface](docs/arxiv-trend-scanner.jpg)
 
-## Engineering highlights
 
-- **Agentic workflow:** query-planning, paper-analysis, and trend-synthesis agents cooperate through typed data contracts rather than free-form handoffs.
-- **Grounded model integration:** the optional OpenAI backend uses the Responses API with Structured Outputs, treats paper text as untrusted input, and validates model-generated themes and evidence IDs before reporting them.
-- **Deterministic research pipeline:** retrieval windows, arXiv-version deduplication, trend calculations, evidence gates, and reproducibility manifests remain outside the language model.
-- **Full-text enrichment:** a bounded PDF pipeline downloads, caches, hashes, and parses a balanced subset of recent and baseline papers while excluding extracted full text from exported artifacts.
-- **Two usable interfaces:** a FastAPI application runs scans as background jobs for the browser UI, while the same workflow is available through a packaged command-line interface.
-- **Testable offline behavior:** synthetic arXiv fixtures exercise the workflow without network or model access, and GitHub Actions runs the test suite on every push and pull request.
-
-## What the three agents do
+## How it works
 
 ```text
 Topic
@@ -42,14 +34,8 @@ Trend Analyst Agent ── turns only validated statistics into cited observatio
 Markdown report + JSON/CSV evidence + reproducibility manifest
 ```
 
-The controller can broaden the search once when the focused query produces too few candidates. Model-generated trend statements pass through an evidence gate: unknown themes, unknown arXiv IDs, and statements with too little support are rejected.
-
-## Why there are two modes
-
 - **Heuristic mode (default):** no API key or hosted model is required. The same agent boundaries run with transparent keyword and extractive policies, which makes tests and demos reproducible.
 - **OpenAI mode (optional):** uses the Responses API and Structured Outputs for query planning, paper analysis, and trend synthesis. Deterministic retrieval, date windows, counting, deduplication, and evidence validation remain outside the model.
-
-This separation makes model behavior replaceable and keeps numerical trend claims testable.
 
 ## Quick start
 
@@ -152,32 +138,4 @@ Each run writes:
 
 Scheduled monitoring, embeddings/vector search, OCR, and citation-network analysis remain outside the current scope.
 
-## Reproducibility and safety choices
-
-- The exact topic, queries, search time, date windows, backend, and model are recorded.
-- arXiv versions are merged by canonical identifier; the latest updated record is kept.
-- Every paper is labeled `abstract_only` or `pdf_full_text` according to the evidence actually supplied to the analyst.
-- External abstracts and PDF text are never allowed to modify the workflow or its inclusion rules.
-- Downloaded PDFs remain in a local ignored cache; exported JSON records hashes and extraction metadata, not full text.
-- PDF size, page count, and analysis-text length are bounded.
-- Trend direction is calculated from counts and shares, not invented by a language model.
-- Model failures fall back to the deterministic policy and are recorded in the manifest.
-- Reports state when evidence is too sparse to support a trend claim.
-
-## Tests
-
-```bash
-PYTHONPATH=src python -m unittest discover -s tests -v
-```
-
-The core test suite runs offline against a synthetic Atom feed. The PDF extraction test creates its own temporary PDF and is skipped when the optional PDF package is not installed.
-
-## Current limitations
-
-- arXiv is a preprint repository; inclusion does not imply peer review or independent verification.
-- Abstracts can omit methods, null results, and important limitations.
-- PDF text extraction can misread multi-column layouts, equations, tables, or scanned pages; OCR is not included.
-- Keyword themes are transparent but imperfect; model-backed classification can also be wrong.
-- A fixed `max-results` sample can miss papers in high-volume topics.
-- Share changes are descriptive signals, not causal evidence about the field.
 
